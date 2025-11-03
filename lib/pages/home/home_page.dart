@@ -96,8 +96,37 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   void _playTrack(MusicTrack track, List<MusicTrack> playlist, int index) async {
     try {
+      // Show downloading snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '⬇️ Downloading: ${track.title}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFFF9800),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      
       await _playerService.playTrack(track, playlist: playlist, index: index);
       
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('🎵 Now playing: ${track.title}'),

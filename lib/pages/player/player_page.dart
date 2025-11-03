@@ -202,6 +202,44 @@ class _PlayerPageState extends State<PlayerPage> with TickerProviderStateMixin {
                               fontWeight: FontWeight.w400,
                             ),
                           ),
+                          // Download progress indicator
+                          if (_playerService.isDownloading)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.download_rounded,
+                                        color: Color(0xFFFF9800),
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Downloading... ${(_playerService.downloadProgress * 100).toStringAsFixed(0)}%',
+                                        style: GoogleFonts.poppins(
+                                          color: const Color(0xFFFF9800),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: LinearProgressIndicator(
+                                      value: _playerService.downloadProgress,
+                                      backgroundColor: Colors.grey[800],
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF9800)),
+                                      minHeight: 6,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -264,35 +302,47 @@ class _PlayerPageState extends State<PlayerPage> with TickerProviderStateMixin {
                         },
                       ),
 
-                      // Play/Pause
+                      // Play/Pause or Loading
                       Container(
                         width: 70,
                         height: 70,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF1DB954), Color(0xFF1ED760)],
+                          gradient: LinearGradient(
+                            colors: _playerService.isDownloading
+                                ? [const Color(0xFFFF9800), const Color(0xFFFFB84D)]
+                                : [const Color(0xFF1DB954), const Color(0xFF1ED760)],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF1DB954).withOpacity(0.5),
+                              color: (_playerService.isDownloading
+                                      ? const Color(0xFFFF9800)
+                                      : const Color(0xFF1DB954))
+                                  .withOpacity(0.5),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),
                           ],
                         ),
-                        child: IconButton(
-                          icon: Icon(
-                            _playerService.isPlaying
-                                ? Icons.pause_rounded
-                                : Icons.play_arrow_rounded,
-                            color: Colors.white,
-                            size: 38,
-                          ),
-                          onPressed: () {
-                            _playerService.togglePlayPause();
-                          },
-                        ),
+                        child: _playerService.isDownloading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : IconButton(
+                                icon: Icon(
+                                  _playerService.isPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  color: Colors.white,
+                                  size: 38,
+                                ),
+                                onPressed: () {
+                                  _playerService.togglePlayPause();
+                                },
+                              ),
                       ),
 
                       // Next

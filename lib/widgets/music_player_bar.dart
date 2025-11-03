@@ -47,13 +47,21 @@ class _MusicPlayerBarState extends State<MusicPlayerBar> {
             ),
             child: Column(
               children: [
-                // Progress bar indicator
-                LinearProgressIndicator(
-                  value: _playerService.isPlaying ? null : 0.0,
-                  backgroundColor: Colors.grey[800],
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1DB954)),
-                  minHeight: 3,
-                ),
+                // Progress bar indicator (show download progress or playback)
+                if (_playerService.isDownloading)
+                  LinearProgressIndicator(
+                    value: _playerService.downloadProgress,
+                    backgroundColor: Colors.grey[800],
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF9800)),
+                    minHeight: 3,
+                  )
+                else
+                  LinearProgressIndicator(
+                    value: _playerService.isPlaying ? null : 0.0,
+                    backgroundColor: Colors.grey[800],
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1DB954)),
+                    minHeight: 3,
+                  ),
 
                 // Player controls
                 Expanded(
@@ -98,11 +106,15 @@ class _MusicPlayerBarState extends State<MusicPlayerBar> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                track.artist,
+                                _playerService.isDownloading
+                                    ? 'Downloading... ${(_playerService.downloadProgress * 100).toStringAsFixed(0)}%'
+                                    : track.artist,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.poppins(
-                                  color: Colors.grey[400],
+                                  color: _playerService.isDownloading
+                                      ? const Color(0xFFFF9800)
+                                      : Colors.grey[400],
                                   fontSize: 12,
                                 ),
                               ),
@@ -110,19 +122,31 @@ class _MusicPlayerBarState extends State<MusicPlayerBar> {
                           ),
                         ),
 
-                        // Play/Pause button
-                        IconButton(
-                          icon: Icon(
-                            _playerService.isPlaying
-                                ? Icons.pause_circle_filled_rounded
-                                : Icons.play_circle_filled_rounded,
-                            size: 48,
-                            color: const Color(0xFF1DB954),
+                        // Play/Pause button or Download indicator
+                        if (_playerService.isDownloading)
+                          const SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFFF9800),
+                                strokeWidth: 3,
+                              ),
+                            ),
+                          )
+                        else
+                          IconButton(
+                            icon: Icon(
+                              _playerService.isPlaying
+                                  ? Icons.pause_circle_filled_rounded
+                                  : Icons.play_circle_filled_rounded,
+                              size: 48,
+                              color: const Color(0xFF1DB954),
+                            ),
+                            onPressed: () {
+                              _playerService.togglePlayPause();
+                            },
                           ),
-                          onPressed: () {
-                            _playerService.togglePlayPause();
-                          },
-                        ),
                       ],
                     ),
                   ),

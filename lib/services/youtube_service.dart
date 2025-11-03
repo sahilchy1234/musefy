@@ -166,13 +166,46 @@ class YouTubeService {
   /// Get audio stream URL for playback
   Future<String?> getAudioStreamUrl(String videoId) async {
     try {
-      print('Getting audio stream for video: $videoId');
+      print('🎬 Getting audio stream for video: $videoId');
+      
       var manifest = await _youtubeExplode.videos.streamsClient.getManifest(videoId);
-      var audioStream = manifest.audioOnly.withHighestBitrate();
-      print('Audio stream URL obtained: ${audioStream.url}');
+      
+      // Try to get audio-only stream with highest bitrate
+      var audioStreams = manifest.audioOnly;
+      
+      if (audioStreams.isEmpty) {
+        print('❌ No audio-only streams available');
+        return null;
+      }
+      
+      // Sort by bitrate and get the best quality
+      var audioStream = audioStreams.withHighestBitrate();
+      
+      print('✅ Audio stream found:');
+      print('   - Bitrate: ${audioStream.bitrate.kiloBitsPerSecond.toStringAsFixed(0)} kbps');
+      print('   - Size: ${(audioStream.size.totalBytes / 1024 / 1024).toStringAsFixed(2)} MB');
+      print('   - Codec: ${audioStream.audioCodec}');
+      print('   - Container: ${audioStream.container.name}');
+      
       return audioStream.url.toString();
+    } catch (e, stackTrace) {
+      print('❌ Error getting audio stream: $e');
+      print('📍 Stack trace: $stackTrace');
+      return null;
+    }
+  }
+
+  /// Download audio stream directly using youtube-explode
+  Stream<List<int>>? getAudioStream(String videoId) {
+    try {
+      print('🎬 Getting direct audio stream for video: $videoId');
+      return _youtubeExplode.videos.streamsClient.get(
+        _youtubeExplode.videos.streamsClient.getManifest(videoId).then(
+          (manifest) => manifest.audioOnly.withHighestBitrate(),
+        ) as dynamic,
+      );
     } catch (e) {
-      print('Error getting audio stream: $e');
+      print('❌ Error getting direct audio stream: $e');
       return null;
     }
   }
